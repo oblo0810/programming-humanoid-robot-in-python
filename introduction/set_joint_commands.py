@@ -18,12 +18,19 @@ from spark_agent import SparkAgent
 
 
 class MyAgent(SparkAgent):
-    def shake_head(self, perception) {
+    def __init__(self, turn_direction=-1):
+        super().__init__()
+        self.turn_direction = turn_direction
+
+    # A fun little function I wrote to make NAO shake his head. 
+    # To be used when your teammate makes a rather silly play. 
+    def shake_head(self, perception):
         action = super(MyAgent, self).think(perception)
-        if self.perception.joint("HeadYaw") <= -1 {
-            self.turn_direction = self.turn_direction * -1
-        }
-    }
+        if ( self.perception.joint["HeadYaw"] <= -1 and self.turn_direction == -1 ) or ( self.perception.joint["HeadYaw"] >= 1 and self.turn_direction == 1 ): 
+            self.turn_direction = self.turn_direction * ( -1 )
+        action.speed["HeadYaw"] = 0.5 * self.turn_direction
+        print(self.perception.joint["HeadYaw"])
+        return action
 
     def think(self, perception):
         action = super(MyAgent, self).think(perception)
@@ -31,12 +38,9 @@ class MyAgent(SparkAgent):
         action.speed["HeadYaw"] = -0.1
         action.stiffness["LShoulderPitch"] = 0
         # Output test print
-        angle = self.perception.joint["HeadYaw"]
-        temperature = self.perception.joint_temperature["HeadYaw"]
-        print('HeadYaw angle: ' + str(angle) + ' temperature: ' + str(temperature))
+        # action = self.shake_head(perception)
         return action
 
 if '__main__' == __name__:
     agent = MyAgent()
-    agent.turn_direction = -1
     agent.run()
