@@ -18,12 +18,25 @@ from spark_agent import SparkAgent
 
 
 class MyAgent(SparkAgent):
+    def shake_head(self, perception) {
+        action = super(MyAgent, self).think(perception)
+        if self.perception.joint("HeadYaw") <= -1 {
+            self.turn_direction = self.turn_direction * -1
+        }
+    }
+
     def think(self, perception):
         action = super(MyAgent, self).think(perception)
         # YOUR CODE HERE
-
+        action.speed["HeadYaw"] = -0.1
+        action.stiffness["LShoulderPitch"] = 0
+        # Output test print
+        angle = self.perception.joint["HeadYaw"]
+        temperature = self.perception.joint_temperature["HeadYaw"]
+        print('HeadYaw angle: ' + str(angle) + ' temperature: ' + str(temperature))
         return action
 
 if '__main__' == __name__:
     agent = MyAgent()
+    agent.turn_direction = -1
     agent.run()
