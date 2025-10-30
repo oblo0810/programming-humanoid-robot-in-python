@@ -33,18 +33,33 @@ class PIDController(object):
         self.u = np.zeros(size)
         self.e1 = np.zeros(size)
         self.e2 = np.zeros(size)
+        self.size = size
         # ADJUST PARAMETERS BELOW
-        delay = 0
+        delay = 0 # The delay is optional but in a real model you need it for good performance.
         self.Kp = 0
         self.Ki = 0
         self.Kd = 0
-        self.y = deque(np.zeros(size), maxlen=delay + 1)
+        self.delay_steps = delay
+        self.y = deque(maxlen=delay + 1)
+        for _ in range(self.delay_steps + 1):
+            self.y.append(np.zeros(self.size))
 
     def set_delay(self, delay):
         '''
         @param delay: delay in number of steps
         '''
-        self.y = deque(self.y, delay + 1)
+        self.delay_steps = int(delay)
+        
+        # Create a new, clean deque
+        self.y = deque(maxlen=self.delay_steps + 1)
+        for _ in range(self.delay_steps + 1):
+            self.y.append(np.zeros(self.size))
+            
+        # RESET THE CONTROLLER'S MEMORY
+        # This is the step you were missing.
+        self.u.fill(0)
+        self.e1.fill(0)
+        self.e2.fill(0)
 
     def control(self, target, sensor):
         '''apply PID control
@@ -53,7 +68,8 @@ class PIDController(object):
         @return control signal
         '''
         # calc u:
-        e = target - sensor
+        feedback = self.y[-1] + (sensor - self.y[0])
+        e = target - feedback
         
         c1 = self.Kp + self.Ki * self.dt + self.Kd / self.dt
         c2 = self.Kp + 2 * self.Kd/self.dt
@@ -64,6 +80,10 @@ class PIDController(object):
         # update parameters 
         self.e2 = self.e1
         self.e1 = e
+
+        # calculate new y and update model
+        y_tilde_new = self.y[-1] + self.u * self.dt
+        self.y.append(y_tilde_new)
         
         return self.u
 
