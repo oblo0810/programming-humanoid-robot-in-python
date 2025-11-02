@@ -65,9 +65,6 @@ class AngleInterpolationAgent(PIDAgent):
             self.start_time = perception.time
 
         names, times, keys = keyframes
-        # print(perception.joint)
-        # print(keyframes)
-        # print(keyframes[1])
         target_joints = perception.joint.copy()
         # YOUR CODE HERE
         # print(perception.time)
