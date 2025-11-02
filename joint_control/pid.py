@@ -43,8 +43,8 @@ class PIDController(object):
         # ADJUST PARAMETERS BELOW
         delay = 0  # The delay is optional but in a real model you need it for good performance.
         self.Kp = 20
-        self.Ki = 0.2
-        self.Kd = 0
+        self.Ki = 0.1
+        self.Kd = 0.1
         self.delay_steps = delay
         # I changed this a little bit since I had issues with y. I believe the old implementation saved scalars in place of vectors leading to slight errors.
         self.y = deque(maxlen=delay + 1)
