@@ -20,7 +20,7 @@
 """
 
 from pid import PIDAgent
-from keyframes import hello
+from keyframes import hello, rightBackToStand, leftBackToStand
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -37,8 +37,15 @@ class AngleInterpolationAgent(PIDAgent):
         )
         self.keyframes = ([], [], [])
         self.start_time = None
+        self.current_motion = self.keyframes
 
     def think(self, perception):
+        if self.keyframes != self.current_motion or self.start_time and self.start_time + 10 < perception.time:
+            # Only start a new animation, when the robot 
+            print("Starting new Motion.")
+            # print("current motion ", self.current_motion)
+            self.current_motion = self.keyframes
+            self.start_time = None
         target_joints = self.angle_interpolation(self.keyframes, perception)
         target_joints["RHipYawPitch"] = target_joints[
             "LHipYawPitch"
@@ -50,13 +57,10 @@ class AngleInterpolationAgent(PIDAgent):
         """
         finds the start index of a segment
         """
-        # Die Logik in angle_interpolation stellt bereits sicher,
-        # dass wir nicht vor dem ersten oder nach dem letzten Keyframe sind.
         for j in range(len(times) - 1):
             if times[j] <= current_time < times[j + 1]:
                 return j
 
-        # Fallback, sollte eigentlich nicht erreicht werden, aber zur Sicherheit:
         return len(times) - 2
 
     def angle_interpolation(self, keyframes, perception):
@@ -73,9 +77,9 @@ class AngleInterpolationAgent(PIDAgent):
             joint_name = names[i]
             joint_times = times[i]
             joint_keys = keys[i]
-            if joint_name not in perception.joint:
-                # Needed because some joints in the keyframes dont exist.
-                continue
+            # if joint_name not in perception.joint:
+            #     # Needed because some joints in the keyframes dont exist.
+            #     continue
 
             # print(joint_name)
             # print(joint_times)
@@ -123,5 +127,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == "__main__":
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

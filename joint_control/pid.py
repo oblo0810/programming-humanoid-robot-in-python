@@ -42,9 +42,9 @@ class PIDController(object):
         self.size = size
         # ADJUST PARAMETERS BELOW
         delay = 0  # The delay is optional but in a real model you need it for good performance.
-        self.Kp = 20
+        self.Kp = 10
         self.Ki = 0.1
-        self.Kd = 0.1
+        self.Kd = 0.0
         self.delay_steps = delay
         # I changed this a little bit since I had issues with y. I believe the old implementation saved scalars in place of vectors leading to slight errors.
         self.y = deque(maxlen=delay + 1)
@@ -75,11 +75,31 @@ class PIDController(object):
         @return control signal
         """
         # calc u:
-        feedback = self.y[-1] + (sensor - self.y[0])
-        e = target - feedback
+        # feedback = self.y[-1] + (sensor - self.y[0])
+        # e = target - feedback
+        #
+        # c1 = self.Kp + self.Ki * self.dt + self.Kd / self.dt
+        # c2 = self.Kp + 2 * self.Kd / self.dt
+        # c3 = self.Kd / self.dt
+        #
+        # self.u = self.u + c1 * e - c2 * self.e1 + c3 * self.e2
+        #
+        # # update parameters
+        # self.e2 = self.e1
+        # self.e1 = e
+        #
+        # # calculate new y and update model
+        # y_tilde_new = self.y[-1] + self.u * self.dt
+        # self.y.append(y_tilde_new)
+
+        return self.simple_control(target=target, sensor=sensor)
+
+    def simple_control(self, target, sensor):
+        # calc u:
+        e = target - sensor
 
         c1 = self.Kp + self.Ki * self.dt + self.Kd / self.dt
-        c2 = self.Kp + 2 * self.Kd / self.dt
+        c2 = self.Kp + (2 * self.Kd / self.dt)
         c3 = self.Kd / self.dt
 
         self.u = self.u + c1 * e - c2 * self.e1 + c3 * self.e2
@@ -87,10 +107,6 @@ class PIDController(object):
         # update parameters
         self.e2 = self.e1
         self.e1 = e
-
-        # calculate new y and update model
-        y_tilde_new = self.y[-1] + self.u * self.dt
-        self.y.append(y_tilde_new)
 
         return self.u
 
