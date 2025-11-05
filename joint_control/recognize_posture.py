@@ -14,6 +14,32 @@ from keyframes import hello
 import pickle
 
 ROBOT_POSE_CLF = "robot_pose.pkl"
+POSITIONS = [
+    "HeadBack",
+    "StandInit",
+    "Stand",
+    "Right",
+    "Frog",
+    "Knee",
+    "Left",
+    "Belly",
+    "Sit",
+    "Crouch",
+    "Back",
+]
+
+KEYS = [
+    "LHipYawPitch",
+    "LHipRoll",
+    "LHipPitch",
+    "LKneePitch",
+    "RHipYawPitch",
+    "RHipRoll",
+    "RHipPitch",
+    "RKneePitch",
+    "AngleX",
+    "AngleY",
+]
 
 
 class PostureRecognitionAgent(AngleInterpolationAgent):
@@ -39,22 +65,10 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
     def recognize_posture(self, perception):
         posture = "unknown"
         # Recognize posture
-        keys = [
-            "LHipYawPitch",
-            "LHipRoll",
-            "LHipPitch",
-            "LKneePitch",
-            "RHipYawPitch",
-            "RHipRoll",
-            "RHipPitch",
-            "RKneePitch",
-            "AngleX",
-            "AngleY",
-        ]
-        joint_values = [perception.joint[key] for key in keys[:-2]]
+        joint_values = [perception.joint[key] for key in KEYS[:-2]]
         joint_values.extend(perception.imu)
         prediction_value = self.posture_classifier.predict([joint_values])[0]
-        print(prediction_value)
+        posture = POSITIONS[prediction_value]
         return posture
 
 
