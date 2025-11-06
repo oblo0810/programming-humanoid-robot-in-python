@@ -40,15 +40,10 @@ class AngleInterpolationAgent(PIDAgent):
         self.current_motion = self.keyframes
 
     def think(self, perception):
-        if (
-            self.keyframes != self.current_motion
-            or self.start_time
-            and self.start_time + 10 < perception.time
-        ):
-            # Only start a new animation, when the robot
+        if self.keyframes != self.current_motion:
             print("Starting new Motion.")
-            # print("current motion ", self.current_motion)
             self.current_motion = self.keyframes
+            # Reset start_time so angle_interpolation knows to start from t=0
             self.start_time = None
         target_joints = self.angle_interpolation(self.keyframes, perception)
         target_joints["RHipYawPitch"] = target_joints[
@@ -81,9 +76,9 @@ class AngleInterpolationAgent(PIDAgent):
             joint_name = names[i]
             joint_times = times[i]
             joint_keys = keys[i]
-            # if joint_name not in perception.joint:
-            #     # Needed because some joints in the keyframes dont exist.
-            #     continue
+            if joint_name not in perception.joint:
+                # Needed because some joints in the keyframes dont exist.
+                continue
 
             # print(joint_name)
             # print(joint_times)
@@ -94,19 +89,47 @@ class AngleInterpolationAgent(PIDAgent):
             # Case 1: before the first keyframe:
             if motion_time < joint_times[0]:
                 # This might need to be changed, the robot just snaps into position before the first keyframe which is not intended.
+                start_time = 0.0
+                end_time = joint_times[0]
                 target_angle = joint_keys[0][0]
+                end_key = joint_keys[0]
+                
+                segment_duration = end_time - start_time
+                
+                t = (motion_time - start_time) / segment_duration
+                
+                P0 = perception.joint[joint_name]
+                # print(P0)
+                P3 = end_key[0]
+                P1 = P0
+                P2 = P3 + end_key[1][2]
+                
+                c0 = (1 - t) ** 3
+                c1 = 3 * ((1 - t) ** 2) * t
+                c2 = 3 * (1 - t) * t**2
+                c3 = t**3
+                
+                Bi = c0 * P0 + c1 * P1 + c2 * P2 + c3 * P3
+                target_angle = Bi
 
             # Case 2: after the last keyframe:
             elif motion_time >= joint_times[-1]:
                 target_angle = joint_keys[-1][0]
+                if i == len(names) - 1:  # last joint processed
+                    print("Motion Over")
+                    self.keyframes = ([], [], [])
+                    self.current_motion = self.keyframes
 
             # Case 3: between first and last keyframe
             else:
                 segment_id = self.find_current_segment_id(joint_times, motion_time)
                 start_time = joint_times[segment_id]
+                # print(start_time)
                 end_time = joint_times[segment_id + 1]
                 start_key = joint_keys[segment_id]
+                # print(start_key)
                 end_key = joint_keys[segment_id + 1]
+                # print(end_key)
                 segment_duration = end_time - start_time
 
                 # stores at which point of the segment we are
@@ -127,10 +150,11 @@ class AngleInterpolationAgent(PIDAgent):
 
             target_joints[joint_name] = target_angle
 
+
         return target_joints
 
 
 if __name__ == "__main__":
     agent = AngleInterpolationAgent()
-    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = leftBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
