@@ -44,7 +44,7 @@ class TestStandingUpAgent(StandingUpAgent):
             simspark_ip, simspark_port, teamname, player_id, sync_mode
         )
         self.stiffness_on_off_time = 0
-        self.stiffness_on_cycle = 30  # in seconds
+        self.stiffness_on_cycle = 10  # in seconds
         self.stiffness_off_cycle = 3  # in seconds
 
     def think(self, perception):

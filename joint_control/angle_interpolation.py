@@ -69,71 +69,62 @@ class AngleInterpolationAgent(PIDAgent):
 
         names, times, keys = keyframes
         target_joints = perception.joint.copy()
-        # YOUR CODE HERE
-        # print(perception.time)
+
+        # Handle case of empty motion
+        if len(times) == 0:
+            # If motion finished before, keep holding the last pose if available
+            if hasattr(self, "_final_pose") and self._final_pose is not None:
+                for j, a in self._final_pose.items():
+                    if j in target_joints:
+                        target_joints[j] = a
+            return target_joints
+
+        # Compute the global end time for the motion
+        max_time = max(max(t) for t in times if len(t) > 0)
         motion_time = perception.time - self.start_time
+
         for i in range(len(names)):
             joint_name = names[i]
             joint_times = times[i]
             joint_keys = keys[i]
-            if joint_name not in perception.joint:
-                # Needed because some joints in the keyframes dont exist.
-                continue
 
-            # print(joint_name)
-            # print(joint_times)
-            # print(joint_keys)
+            if joint_name not in perception.joint or len(joint_times) == 0:
+                continue
 
             target_angle = 0.0
 
-            # Case 1: before the first keyframe:
+            # Case 1: before the first keyframe
             if motion_time < joint_times[0]:
-                # This might need to be changed, the robot just snaps into position before the first keyframe which is not intended.
                 start_time = 0.0
                 end_time = joint_times[0]
-                target_angle = joint_keys[0][0]
                 end_key = joint_keys[0]
-                
                 segment_duration = end_time - start_time
-                
-                t = (motion_time - start_time) / segment_duration
-                
+                t = (motion_time - start_time) / segment_duration if segment_duration > 0 else 0.0
+
                 P0 = perception.joint[joint_name]
-                # print(P0)
                 P3 = end_key[0]
                 P1 = P0
                 P2 = P3 + end_key[1][2]
-                
+
                 c0 = (1 - t) ** 3
                 c1 = 3 * ((1 - t) ** 2) * t
                 c2 = 3 * (1 - t) * t**2
                 c3 = t**3
-                
-                Bi = c0 * P0 + c1 * P1 + c2 * P2 + c3 * P3
-                target_angle = Bi
+                target_angle = c0 * P0 + c1 * P1 + c2 * P2 + c3 * P3
 
-            # Case 2: after the last keyframe:
+            # Case 2: after the last keyframe
             elif motion_time >= joint_times[-1]:
                 target_angle = joint_keys[-1][0]
-                if i == len(names) - 1:  # last joint processed
-                    print("Motion Over")
-                    self.keyframes = ([], [], [])
-                    self.current_motion = self.keyframes
 
-            # Case 3: between first and last keyframe
+            # Case 3: between keyframes (Bezier interpolation)
             else:
                 segment_id = self.find_current_segment_id(joint_times, motion_time)
                 start_time = joint_times[segment_id]
-                # print(start_time)
                 end_time = joint_times[segment_id + 1]
                 start_key = joint_keys[segment_id]
-                # print(start_key)
                 end_key = joint_keys[segment_id + 1]
-                # print(end_key)
                 segment_duration = end_time - start_time
-
-                # stores at which point of the segment we are
-                t = (motion_time - start_time) / segment_duration
+                t = (motion_time - start_time) / segment_duration if segment_duration > 0 else 0.0
 
                 P0 = start_key[0]
                 P3 = end_key[0]
@@ -144,14 +135,26 @@ class AngleInterpolationAgent(PIDAgent):
                 c1 = 3 * ((1 - t) ** 2) * t
                 c2 = 3 * (1 - t) * t**2
                 c3 = t**3
-
-                Bi = c0 * P0 + c1 * P1 + c2 * P2 + c3 * P3
-                target_angle = Bi
+                target_angle = c0 * P0 + c1 * P1 + c2 * P2 + c3 * P3
 
             target_joints[joint_name] = target_angle
 
+        if motion_time >= max_time:
+            # Save and hold the final pose to be able to continuesly send it.
+            self._final_pose = {n: keys[i][-1][0] for i, n in enumerate(names)}
+            print("Motion ended")
+            
+            for j, a in self._final_pose.items():
+                if j in target_joints:
+                    target_joints[j] = a
 
+            self.keyframes = ([], [], [])
+            self.current_motion = self.keyframes
+
+        # Save current targets so we can reuse them if keyframes empty next frame
+        self._last_target_joints = target_joints.copy()
         return target_joints
+
 
 
 if __name__ == "__main__":
