@@ -40,8 +40,12 @@ class AngleInterpolationAgent(PIDAgent):
         self.current_motion = self.keyframes
 
     def think(self, perception):
-        if self.keyframes != self.current_motion or self.start_time and self.start_time + 10 < perception.time:
-            # Only start a new animation, when the robot 
+        if (
+            self.keyframes != self.current_motion
+            or self.start_time
+            and self.start_time + 10 < perception.time
+        ):
+            # Only start a new animation, when the robot
             print("Starting new Motion.")
             # print("current motion ", self.current_motion)
             self.current_motion = self.keyframes
@@ -89,6 +93,7 @@ class AngleInterpolationAgent(PIDAgent):
 
             # Case 1: before the first keyframe:
             if motion_time < joint_times[0]:
+                # This might need to be changed, the robot just snaps into position before the first keyframe which is not intended.
                 target_angle = joint_keys[0][0]
 
             # Case 2: after the last keyframe:
