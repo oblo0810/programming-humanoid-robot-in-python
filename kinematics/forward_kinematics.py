@@ -1,4 +1,4 @@
-'''In this exercise you need to implement forward kinematics for NAO robot
+"""In this exercise you need to implement forward kinematics for NAO robot
 
 * Tasks:
     1. complete the kinematics chain definition (self.chains in class ForwardKinematicsAgent)
@@ -14,54 +14,95 @@
 * Hints:
     1. the local_trans has to consider different joint axes and link parameters for different joints
     2. Please use radians and meters as unit.
-'''
+"""
 
 # add PYTHONPATH
 import os
 import sys
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
 
-from numpy.matlib import matrix, identity
+sys.path.append(
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "joint_control")
+)
+
+from numpy.matlib import identity
+from numpy import matrix
 
 from recognize_posture import PostureRecognitionAgent
 
 
 class ForwardKinematicsAgent(PostureRecognitionAgent):
-    def __init__(self, simspark_ip='localhost',
-                 simspark_port=3100,
-                 teamname='DAInamite',
-                 player_id=0,
-                 sync_mode=True):
-        super(ForwardKinematicsAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
+    def __init__(
+        self,
+        simspark_ip="localhost",
+        simspark_port=3100,
+        teamname="DAInamite",
+        player_id=0,
+        sync_mode=True,
+    ):
+        super(ForwardKinematicsAgent, self).__init__(
+            simspark_ip, simspark_port, teamname, player_id, sync_mode
+        )
         self.transforms = {n: identity(4) for n in self.joint_names}
 
         # chains defines the name of chain and joints of the chain
-        self.chains = {'Head': ['HeadYaw', 'HeadPitch']
-                       # YOUR CODE HERE
-                       }
+        self.chains = {
+            "Head": ["HeadYaw", "HeadPitch"],
+            "LArm": [
+                "LShoulderPitch",
+                "LShoulderRoll",
+                "LElbowYaw",
+                "LElbowRoll",
+                "LWristYaw",
+                # "LHand", actuator not a joint, so I will leave it out for now
+            ],
+            "LLeg": [
+                "LHipYawPitch",
+                "LHipRoll",
+                "LHipPitch",
+                "LKneePitch",
+                "LAnklePitch",
+                "LAnkleRoll",
+            ],
+            "RLeg": [
+                "RHipYawPitch",
+                "RHipRoll",
+                "RHipPitch",
+                "RKneePitch",
+                "RAnklePitch",
+                "RAnkleRoll",
+            ],
+            "RArm": [
+                "RShoulderPitch",
+                "RShoulderRoll",
+                "RElbowYaw",
+                "RElbowRoll",
+                "RWristYaw",
+                # "RHand", actuator not a joint, so you know the deal
+            ],
+        }
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
         return super(ForwardKinematicsAgent, self).think(perception)
 
     def local_trans(self, joint_name, joint_angle):
-        '''calculate local transformation of one joint
+        """calculate local transformation of one joint
 
         :param str joint_name: the name of joint
         :param float joint_angle: the angle of joint in radians
         :return: transformation
         :rtype: 4x4 matrix
-        '''
+        """
         T = identity(4)
         # YOUR CODE HERE
 
         return T
 
     def forward_kinematics(self, joints):
-        '''forward kinematics
+        """forward kinematics
 
         :param joints: {joint_name: joint_angle}
-        '''
+        """
         for chain_joints in self.chains.values():
             T = identity(4)
             for joint in chain_joints:
@@ -71,6 +112,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
 
                 self.transforms[joint] = T
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     agent = ForwardKinematicsAgent()
     agent.run()

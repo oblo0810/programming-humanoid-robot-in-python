@@ -56,3 +56,7 @@ target/
 
 # VSCode files 
 .vscode
+
+# Virtual Environments 
+.venv
+.ancient
