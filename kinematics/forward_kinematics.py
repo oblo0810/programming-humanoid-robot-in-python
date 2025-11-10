@@ -81,6 +81,81 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
             ],
         }
 
+        self.joint_params = {
+            "HeadYaw": {"axis": "z", "x": 0, "y": 0, "z": 0.12650},
+            "HeadPitch": {"axis": "y", "x": 0, "y": 0, "z": 0},
+            "LShoulderPitch": {
+                "axis": "y",
+                "x": 0,
+                "y": 0.098,
+                "z": 0.100,
+            },
+            "LShoulderRoll": {"axis": "z", "x": 0, "y": 0, "z": 0},
+            "LElbowYaw": {
+                "axis": "x",
+                "x": 0.105,
+                "y": 0.015,
+                "z": 0,
+            },
+            "LElbowRoll": {"axis": "z", "x": 0, "y": 0, "z": 0},
+            "LHipYawPitch": {
+                "axis": "z",
+                "x": 0,
+                "y": 0.050,
+                "z": -0.085,
+            },
+            "LHipRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
+            "LHipPitch": {"axis": "y", "x": 0, "y": 0, "z": 0},
+            "LKneePitch": {
+                "axis": "y",
+                "x": 0,
+                "y": 0,
+                "z": -0.100,
+            },
+            "LAnklePitch": {
+                "axis": "y",
+                "x": 0,
+                "y": 0,
+                "z": -0.10290,
+            },
+            "RAnkleRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
+            "RShoulderPitch": {
+                "axis": "y",
+                "x": 0,
+                "y": 0.098,
+                "z": 0.100,
+            },
+            "RShoulderRoll": {"axis": "z", "x": 0, "y": 0, "z": 0},
+            "RElbowYaw": {
+                "axis": "x",
+                "x": 0.105,
+                "y": 0.015,
+                "z": 0,
+            },
+            "RElbowRoll": {"axis": "z", "x": 0, "y": 0, "z": 0},
+            "RHipYawPitch": {
+                "axis": "z",
+                "x": 0,
+                "y": 0.050,
+                "z": -0.085,
+            },
+            "RHipRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
+            "RHipPitch": {"axis": "y", "x": 0, "y": 0, "z": 0},
+            "RKneePitch": {
+                "axis": "y",
+                "x": 0,
+                "y": 0,
+                "z": -0.100,
+            },
+            "RAnklePitch": {
+                "axis": "y",
+                "x": 0,
+                "y": 0,
+                "z": -0.10290,
+            },
+            "LAnkleRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
+        }
+
     def think(self, perception):
         self.forward_kinematics(perception.joint)
         return super(ForwardKinematicsAgent, self).think(perception)
