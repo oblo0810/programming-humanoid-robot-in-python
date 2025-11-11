@@ -24,8 +24,9 @@ sys.path.append(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "joint_control")
 )
 
+import numpy as np
+
 from numpy.matlib import identity
-from numpy import matrix
 from math import cos, sin
 
 from recognize_posture import PostureRecognitionAgent
@@ -173,7 +174,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         # YOUR CODE HERE
         joint_params = self.joint_params[joint_name]
 
-        T_link = matrix(
+        T_link = np.array(
             [
                 [1, 0, 0, joint_params["x"]],
                 [0, 1, 0, joint_params["y"]],
@@ -184,7 +185,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
 
         R = identity(4)
         if joint_params["axis"] == "x":
-            R = matrix(
+            R = np.array(
                 [
                     [1, 0, 0, 0],
                     [0, cos(joint_angle), -sin((joint_angle)), 0],
@@ -193,7 +194,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 ]
             )
         if joint_params["axis"] == "y":
-            R = matrix(
+            R = np.array(
                 [
                     [cos(joint_angle), 0, sin(joint_angle), 0],
                     [0, 1, 0, 0],
@@ -202,7 +203,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 ]
             )
         if joint_params["axis"] == "z":
-            R = matrix(
+            R = np.array(
                 [
                     [cos(joint_angle), sin(joint_angle), 0, 0],
                     [-sin(joint_angle), cos(joint_angle), 0, 0],
