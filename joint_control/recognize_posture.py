@@ -12,8 +12,13 @@
 from angle_interpolation import AngleInterpolationAgent
 from keyframes import hello
 import pickle
+from pathlib import Path
 
-ROBOT_POSE_CLF = "robot_pose.pkl"
+SCRIPT_PATH = Path(__file__).resolve()
+SCRIPT_DIR = SCRIPT_PATH.parent
+PICKLE_FILE_PATH = SCRIPT_DIR / "robot_pose.pkl"
+
+ROBOT_POSE_CLF = PICKLE_FILE_PATH
 POSITIONS = [
     "HeadBack",
     "StandInit",

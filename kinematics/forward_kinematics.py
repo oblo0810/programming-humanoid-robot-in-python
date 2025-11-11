@@ -26,6 +26,7 @@ sys.path.append(
 
 from numpy.matlib import identity
 from numpy import matrix
+from math import cos, sin
 
 from recognize_posture import PostureRecognitionAgent
 
@@ -52,7 +53,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 "LShoulderRoll",
                 "LElbowYaw",
                 "LElbowRoll",
-                "LWristYaw",
+                # "LWristYaw", does not seem to exist
                 # "LHand", actuator not a joint, so I will leave it out for now
             ],
             "LLeg": [
@@ -76,7 +77,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 "RShoulderRoll",
                 "RElbowYaw",
                 "RElbowRoll",
-                "RWristYaw",
+                # "RWristYaw", does not seem to exist
                 # "RHand", actuator not a joint, so you know the deal
             ],
         }
@@ -118,6 +119,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 "y": 0,
                 "z": -0.10290,
             },
+            "LAnkleRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
             "RAnkleRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
             "RShoulderPitch": {
                 "axis": "y",
@@ -153,7 +155,6 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 "y": 0,
                 "z": -0.10290,
             },
-            "LAnkleRoll": {"axis": "x", "x": 0, "y": 0, "z": 0},
         }
 
     def think(self, perception):
@@ -170,6 +171,47 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         """
         T = identity(4)
         # YOUR CODE HERE
+        joint_params = self.joint_params[joint_name]
+
+        T_link = matrix(
+            [
+                [1, 0, 0, joint_params["x"]],
+                [0, 1, 0, joint_params["y"]],
+                [0, 0, 1, joint_params["z"]],
+                [0, 0, 0, 1],
+            ]
+        )
+
+        R = identity(4)
+        if joint_params["axis"] == "x":
+            R = matrix(
+                [
+                    [1, 0, 0, 0],
+                    [0, cos(joint_angle), -sin((joint_angle)), 0],
+                    [0, sin(joint_angle), cos(joint_angle), 0],
+                    [0, 0, 0, 1],
+                ]
+            )
+        if joint_params["axis"] == "y":
+            R = matrix(
+                [
+                    [cos(joint_angle), 0, sin(joint_angle), 0],
+                    [0, 1, 0, 0],
+                    [-sin(joint_angle), 0, cos(joint_angle), 0],
+                    [0, 0, 0, 1],
+                ]
+            )
+        if joint_params["axis"] == "z":
+            R = matrix(
+                [
+                    [cos(joint_angle), sin(joint_angle), 0, 0],
+                    [-sin(joint_angle), cos(joint_angle), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1],
+                ]
+            )
+
+        T = T_link @ R
 
         return T
 
@@ -184,10 +226,12 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 angle = joints[joint]
                 Tl = self.local_trans(joint, angle)
                 # YOUR CODE HERE
-
+                T = T @ Tl
                 self.transforms[joint] = T
+                print(self.transforms)
 
 
 if __name__ == "__main__":
     agent = ForwardKinematicsAgent()
+    agent.forward_kinematics(agent.perception.joint)
     agent.run()
