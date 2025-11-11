@@ -24,10 +24,12 @@ sys.path.append(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "joint_control")
 )
 
-import numpy as np
+import autograd.numpy as np
 
-from numpy.matlib import identity
-from math import cos, sin
+# from numpy.matlib import identity
+
+# from math import cos, sin
+from autograd.numpy import sin, cos, identity
 
 from recognize_posture import PostureRecognitionAgent
 
@@ -229,7 +231,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 # YOUR CODE HERE
                 T = T @ Tl
                 self.transforms[joint] = T
-                print(self.transforms)
+                # print(self.transforms)
 
 
 if __name__ == "__main__":
