@@ -9,13 +9,14 @@
        and test your inverse kinematics implementation.
 """
 
+from typing import final
 from forward_kinematics import ForwardKinematicsAgent
-from numpy.matlib import identity
-import numpy as np
+import autograd.numpy as np
+from autograd.numpy import identity
 from autograd import grad
 
 MAX_ITERATIONS = 1000
-LEARNING_RATE = 1e-2
+LEARNING_RATE = 0.1
 MAX_ERROR = 1e-4
 
 
@@ -47,29 +48,69 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         # calculate inverse kinematics using Jacobian method
         target = transform
         chain_joints = self.chains[effector_name]
+        # q holds our joint angles for this joint. These are the ones we want to adjust
+        joint_angles = np.array([self.perception.joint[name] for name in chain_joints])
 
-        def gradient(t):
-            return self.error_func(agent.perception.joint, effector_name, t)
+        def func_to_minimize(joint_angles_array):
+            current_joints = self.perception.joint.copy()
 
-        joint_angles_as_list = np.array(
-            [self.perception.joint[name] for name in chain_joints]
-        )
+            # We update the current joints in our array
+            for i, joint_name in enumerate(chain_joints):
+                current_joints[joint_name] = joint_angles_array[i]
 
-        func_grad = grad(gradient)
+            error = self.error_func(current_joints, effector_name, target)
+            # print("\n\n\n\n", error)
+            return error
+
+        func_grad = grad(func_to_minimize)
 
         for i in range(MAX_ITERATIONS):
-            e = gradient(transform)
-            d = func_grad(transform)
+            d = func_grad(joint_angles)
+            joint_angles = joint_angles - d * LEARNING_RATE
+
+            # We only check for error every 50 runs
+            if i % 50 == 0 or i == MAX_ITERATIONS - 1:
+                error = func_to_minimize(joint_angles)
+                # print(error)
+                if error < MAX_ERROR:
+                    print(f"Converged in {i + 1} iterations.")
+                    break
 
         # print(func(target), self.perception.time)
+        # print("final joint angles: ", joint_angles)
 
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
         """solve the inverse kinematics and control joints use the results"""
-        # YOUR CODE HERE
-        self.inverse_kinematics(effector_name, transform)
-        self.keyframes = ([], [], [])  # the result joint angles have to fill in
+        joint_angles = self.inverse_kinematics(effector_name, transform)
+
+        default_handle_1 = [0, 0.0, 0.0]
+        default_handle_2 = [0, 0.0, 0.0]
+
+        names_list = []
+        times_list = []
+        keys_list = []
+
+        chain_joints = self.chains[effector_name]
+
+        for i, joint_name in enumerate(chain_joints):
+            target_angle = joint_angles[i]
+
+            bezier_key = [target_angle, default_handle_1, default_handle_2]
+
+            names_list.append(joint_name)
+            times_list.append([1.0])
+            keys_list.append([bezier_key])
+
+        # Set the complete keyframes tuple
+        self.keyframes = (names_list, times_list, keys_list)
+
+        # Optional: Print to verify the new structure
+        # print("Generated Keyframes:")
+        # print("Names:", self.keyframes[0])
+        # print("Times:", self.keyframes[1])
+        # print("Keys:", self.keyframes[2])
 
 
 if __name__ == "__main__":

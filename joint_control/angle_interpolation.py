@@ -99,7 +99,11 @@ class AngleInterpolationAgent(PIDAgent):
                 end_time = joint_times[0]
                 end_key = joint_keys[0]
                 segment_duration = end_time - start_time
-                t = (motion_time - start_time) / segment_duration if segment_duration > 0 else 0.0
+                t = (
+                    (motion_time - start_time) / segment_duration
+                    if segment_duration > 0
+                    else 0.0
+                )
 
                 P0 = perception.joint[joint_name]
                 P3 = end_key[0]
@@ -124,7 +128,11 @@ class AngleInterpolationAgent(PIDAgent):
                 start_key = joint_keys[segment_id]
                 end_key = joint_keys[segment_id + 1]
                 segment_duration = end_time - start_time
-                t = (motion_time - start_time) / segment_duration if segment_duration > 0 else 0.0
+                t = (
+                    (motion_time - start_time) / segment_duration
+                    if segment_duration > 0
+                    else 0.0
+                )
 
                 P0 = start_key[0]
                 P3 = end_key[0]
@@ -143,7 +151,7 @@ class AngleInterpolationAgent(PIDAgent):
             # Save and hold the final pose to be able to continuesly send it.
             self._final_pose = {n: keys[i][-1][0] for i, n in enumerate(names)}
             print("Motion ended")
-            
+
             for j, a in self._final_pose.items():
                 if j in target_joints:
                     target_joints[j] = a
@@ -154,7 +162,6 @@ class AngleInterpolationAgent(PIDAgent):
         # Save current targets so we can reuse them if keyframes empty next frame
         self._last_target_joints = target_joints.copy()
         return target_joints
-
 
 
 if __name__ == "__main__":
