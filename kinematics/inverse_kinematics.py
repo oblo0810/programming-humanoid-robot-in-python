@@ -106,12 +106,6 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         # Set the complete keyframes tuple
         self.keyframes = (names_list, times_list, keys_list)
 
-        # Optional: Print to verify the new structure
-        # print("Generated Keyframes:")
-        # print("Names:", self.keyframes[0])
-        # print("Times:", self.keyframes[1])
-        # print("Keys:", self.keyframes[2])
-
 
 if __name__ == "__main__":
     agent = InverseKinematicsAgent()
