@@ -12,6 +12,11 @@
 from forward_kinematics import ForwardKinematicsAgent
 from numpy.matlib import identity
 import numpy as np
+from autograd import grad
+
+MAX_ITERATIONS = 1000
+LEARNING_RATE = 1e-2
+MAX_ERROR = 1e-4
 
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
@@ -19,10 +24,17 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
     Calculates the distance between the current joints and the target.
     """
 
-    def error_func(self, joints, target):
+    def error_func(self, joints, effector, target):
         self.forward_kinematics(joints=joints)
-        current_pos = current_pos_matrix[0:3, 3]
-        target_pos = target[0:3, 3]
+        if effector not in self.chains:
+            raise ValueError("Effector does not exist. :((")
+
+        chain_joints = self.chains[effector]
+        last_joint = chain_joints[-1]
+        current_transform = self.transforms[last_joint]
+        error_matrix = target - current_transform
+
+        return np.sum(error_matrix * error_matrix)
 
     def inverse_kinematics(self, effector_name, transform):
         """solve the inverse kinematics
@@ -34,12 +46,29 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         joint_angles = []
         # calculate inverse kinematics using Jacobian method
         target = transform
-        func = lambda t: self.error_func()
+        chain_joints = self.chains[effector_name]
+
+        def gradient(t):
+            return self.error_func(agent.perception.joint, effector_name, t)
+
+        joint_angles_as_list = np.array(
+            [self.perception.joint[name] for name in chain_joints]
+        )
+
+        func_grad = grad(gradient)
+
+        for i in range(MAX_ITERATIONS):
+            e = gradient(transform)
+            d = func_grad(transform)
+
+        # print(func(target), self.perception.time)
+
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
         """solve the inverse kinematics and control joints use the results"""
         # YOUR CODE HERE
+        self.inverse_kinematics(effector_name, transform)
         self.keyframes = ([], [], [])  # the result joint angles have to fill in
 
 
