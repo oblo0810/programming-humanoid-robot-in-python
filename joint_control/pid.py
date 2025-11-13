@@ -63,7 +63,6 @@ class PIDController(object):
             self.y.append(np.zeros(self.size))
 
         # RESET THE CONTROLLER'S MEMORY
-        # This is the step you were missing.
         self.u.fill(0)
         self.e1.fill(0)
         self.e2.fill(0)
@@ -75,24 +74,28 @@ class PIDController(object):
         @return control signal
         """
         # calc u:
-        # feedback = self.y[-1] + (sensor - self.y[0])
-        # e = target - feedback
-        #
-        # c1 = self.Kp + self.Ki * self.dt + self.Kd / self.dt
-        # c2 = self.Kp + 2 * self.Kd / self.dt
-        # c3 = self.Kd / self.dt
-        #
-        # self.u = self.u + c1 * e - c2 * self.e1 + c3 * self.e2
-        #
-        # # update parameters
-        # self.e2 = self.e1
-        # self.e1 = e
-        #
-        # # calculate new y and update model
-        # y_tilde_new = self.y[-1] + self.u * self.dt
-        # self.y.append(y_tilde_new)
+        feedback = self.y[-1] + (sensor - self.y[0])
+        e = target - feedback
 
-        return self.simple_control(target=target, sensor=sensor)
+        c1 = self.Kp + self.Ki * self.dt + self.Kd / self.dt
+        c2 = self.Kp + 2 * self.Kd / self.dt
+        c3 = self.Kd / self.dt
+
+        self.u = self.u + c1 * e - c2 * self.e1 + c3 * self.e2
+
+        # update parameters
+        self.e2 = self.e1
+        self.e1 = e
+
+        # calculate new y and update model
+        y_tilde_new = self.y[-1] + self.u * self.dt
+        self.y.append(y_tilde_new)
+        #
+        # This implementation works but angle_interpolation did not seem to need it.
+
+        return self.u
+
+        # return self.simple_control(target=target, sensor=sensor)
 
     def simple_control(self, target, sensor):
         # calc u:
