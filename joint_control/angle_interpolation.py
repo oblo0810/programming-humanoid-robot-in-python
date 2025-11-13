@@ -38,6 +38,7 @@ class AngleInterpolationAgent(PIDAgent):
         self.keyframes = ([], [], [])
         self.start_time = None
         self.current_motion = self.keyframes
+        self._final_pose = None
 
     def think(self, perception):
         if self.keyframes != self.current_motion:
@@ -73,7 +74,7 @@ class AngleInterpolationAgent(PIDAgent):
         # Handle case of empty motion
         if len(times) == 0:
             # If motion finished before, keep holding the last pose if available
-            if hasattr(self, "_final_pose") and self._final_pose is not None:
+            if self._final_pose is not None:
                 for j, a in self._final_pose.items():
                     if j in target_joints:
                         target_joints[j] = a
