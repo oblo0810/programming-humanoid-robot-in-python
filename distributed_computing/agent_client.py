@@ -115,6 +115,13 @@ class ClientAgent(object):
 if __name__ == "__main__":
     agent = ClientAgent()
     # TEST CODE HERE
+    # I used Pyro5 for this. Some guide recommended it, but it made this task a lot more
+    # difficult. Especially the multithreading part. But now everything should work.
+    #
+    # To run, you will need to do:
+    # 1. start the pyro5 name server using `pyro5-ns`
+    # 2. in a new terminal start the agent_server
+    # 3. in another new terminal start the agent_client
     print(agent.get_angle("HeadYaw"))
     print(agent.get_posture())
     print(agent.get_transform("LElbowYaw"))
