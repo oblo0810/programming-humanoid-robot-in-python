@@ -118,35 +118,36 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             / (2 * l_upper_leg * l_lower_leg)
         )
 
-        alpha = np.arctan2(z_pos + l_upper_leg, np.sqrt(x_pos**2 + y_pos**2))
-        beta = np.arctan2(
-            l_lower_leg * np.sin(knee_angle),
-            l_upper_leg + l_lower_leg * np.cos(knee_angle),
-        )
-        hip_angle = alpha - beta
+        r_01 = -np.cos(x_pos) * np.sin(z_pos)
+        r_11 = np.cos(x_pos) * np.cos(z_pos)
 
-        hip_yaw = np.arctan2(y_pos, x_pos)
+        r_20 = -np.cos(x_pos) * np.sin(y_pos)
+        r_22 = np.cos(x_pos) * np.cos(y_pos)
 
-        foot_roll = np.arctan2(y_pos, z_pos)
+        hip_yaw = np.arctan2(-r_01, r_11)
+
+        hip_roll = np.arcsin(np.sin(x_pos))
+
+        hip_angle = np.arctan2(-r_20, r_22)
 
         ankle_angle = -hip_angle + knee_angle
         if effector_name == "RLeg":
             return {
                 "RHipYawPitch": hip_yaw,
-                "RHipRoll": 0.0,
+                "RHipRoll": hip_roll,
                 "RHipPitch": hip_angle,
                 "RKneePitch": knee_angle,
                 "RAnklePitch": ankle_angle,
-                "RAnkleRoll": foot_roll,  # Keep the naming convention consistent with NAO's model
+                "RAnkleRoll": 0.0,  # Keep the naming convention consistent with NAO's model
             }
         elif effector_name == "LLeg":
             return {
                 "LHipYawPitch": hip_yaw,
-                "LHipRoll": 0.0,
+                "LHipRoll": hip_roll,
                 "LHipPitch": hip_angle,
                 "LKneePitch": knee_angle,
                 "LAnklePitch": ankle_angle,
-                "LAnkleRoll": foot_roll,  # Keep the naming convention consistent with NAO's model
+                "LAnkleRoll": 0.0,  # Keep the naming convention consistent with NAO's model
             }
 
     def set_transforms(self, effector_name, transform):
