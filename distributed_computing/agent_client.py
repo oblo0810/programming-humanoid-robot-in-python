@@ -132,4 +132,3 @@ if __name__ == "__main__":
     T[-1, 2] = -0.26
     agent.set_transform("LLeg", T)
     agent.post.set_transform("LLeg", T)
-
